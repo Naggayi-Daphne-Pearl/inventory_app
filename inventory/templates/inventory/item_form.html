@@ -1,0 +1,179 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}{{ title }} - Inventory Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-box"></i>
+        {{ title }}
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'inventory:item_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Items
+        </a>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Basic Information -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Basic Information</h5>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.name.id_for_label }}" class="form-label">Name *</label>
+                                {{ form.name }}
+                                {% if form.name.errors %}
+                                    <div class="text-danger">{{ form.name.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.sku.id_for_label }}" class="form-label">SKU *</label>
+                                {{ form.sku }}
+                                <div class="form-text">Unique stock keeping unit identifier</div>
+                                {% if form.sku.errors %}
+                                    <div class="text-danger">{{ form.sku.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                                {{ form.description }}
+                                {% if form.description.errors %}
+                                    <div class="text-danger">{{ form.description.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.category.id_for_label }}" class="form-label">Category *</label>
+                                {{ form.category }}
+                                {% if form.category.errors %}
+                                    <div class="text-danger">{{ form.category.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.supplier.id_for_label }}" class="form-label">Supplier</label>
+                                {{ form.supplier }}
+                                {% if form.supplier.errors %}
+                                    <div class="text-danger">{{ form.supplier.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <!-- Pricing and Stock -->
+                        <div class="col-md-6">
+                            <h5 class="mb-3">Pricing & Stock</h5>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.unit_price.id_for_label }}" class="form-label">Unit Price *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.unit_price }}
+                                </div>
+                                {% if form.unit_price.errors %}
+                                    <div class="text-danger">{{ form.unit_price.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.selling_price.id_for_label }}" class="form-label">Selling Price *</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    {{ form.selling_price }}
+                                </div>
+                                {% if form.selling_price.errors %}
+                                    <div class="text-danger">{{ form.selling_price.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.quantity_in_stock.id_for_label }}" class="form-label">Current Stock</label>
+                                {{ form.quantity_in_stock }}
+                                {% if form.quantity_in_stock.errors %}
+                                    <div class="text-danger">{{ form.quantity_in_stock.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.minimum_stock_level.id_for_label }}" class="form-label">Minimum Stock Level</label>
+                                {{ form.minimum_stock_level }}
+                                <div class="form-text">Alert when stock falls below this level</div>
+                                {% if form.minimum_stock_level.errors %}
+                                    <div class="text-danger">{{ form.minimum_stock_level.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.unit_of_measurement.id_for_label }}" class="form-label">Unit of Measurement</label>
+                                {{ form.unit_of_measurement }}
+                                {% if form.unit_of_measurement.errors %}
+                                    <div class="text-danger">{{ form.unit_of_measurement.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3 form-check">
+                                {{ form.is_active }}
+                                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                                    Active Item
+                                </label>
+                                {% if form.is_active.errors %}
+                                    <div class="text-danger">{{ form.is_active.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{% url 'inventory:item_list' %}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> 
+                            {% if item %}Update Item{% else %}Create Item{% endif %}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto-generate SKU based on name if SKU is empty
+document.getElementById('{{ form.name.id_for_label }}').addEventListener('blur', function() {
+    const skuField = document.getElementById('{{ form.sku.id_for_label }}');
+    if (!skuField.value) {
+        const name = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').substring(0, 8);
+        const timestamp = Date.now().toString().slice(-4);
+        skuField.value = name + timestamp;
+    }
+});
+
+// Calculate profit margin
+function calculateProfitMargin() {
+    const unitPrice = parseFloat(document.getElementById('{{ form.unit_price.id_for_label }}').value) || 0;
+    const sellingPrice = parseFloat(document.getElementById('{{ form.selling_price.id_for_label }}').value) || 0;
+    
+    if (unitPrice > 0) {
+        const margin = ((sellingPrice - unitPrice) / unitPrice * 100).toFixed(2);
+        // You could display this somewhere if needed
+    }
+}
+
+document.getElementById('{{ form.unit_price.id_for_label }}').addEventListener('input', calculateProfitMargin);
+document.getElementById('{{ form.selling_price.id_for_label }}').addEventListener('input', calculateProfitMargin);
+</script>
+{% endblock %}

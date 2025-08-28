@@ -1,0 +1,57 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Categories - Inventory Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-tags"></i>
+        Categories
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'inventory:category_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Category
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    {% for category in categories %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-tag"></i>
+                        {{ category.name }}
+                    </h5>
+                    {% if category.description %}
+                        <p class="card-text">{{ category.description }}</p>
+                    {% endif %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            {{ category.items.count }} item{{ category.items.count|pluralize }}
+                        </small>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'inventory:item_list' %}?category={{ category.id }}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-tags fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No categories found</h4>
+                <p class="text-muted">Start by creating your first category.</p>
+                <a href="{% url 'inventory:category_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Your First Category
+                </a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
