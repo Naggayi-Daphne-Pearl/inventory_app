@@ -1,0 +1,83 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Suppliers - Inventory Management{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+    <h1 class="h2">
+        <i class="fas fa-truck"></i>
+        Suppliers
+    </h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'inventory:supplier_create' %}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add Supplier
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    {% for supplier in suppliers %}
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-truck"></i>
+                        {{ supplier.name }}
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            {% if supplier.contact_person %}
+                                <p class="mb-1">
+                                    <strong>Contact:</strong> {{ supplier.contact_person }}
+                                </p>
+                            {% endif %}
+                            {% if supplier.email %}
+                                <p class="mb-1">
+                                    <strong>Email:</strong> 
+                                    <a href="mailto:{{ supplier.email }}">{{ supplier.email }}</a>
+                                </p>
+                            {% endif %}
+                            {% if supplier.phone %}
+                                <p class="mb-1">
+                                    <strong>Phone:</strong> {{ supplier.phone }}
+                                </p>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            {% if supplier.address %}
+                                <p class="mb-1">
+                                    <strong>Address:</strong><br>
+                                    {{ supplier.address|linebreaks }}
+                                </p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            {{ supplier.items.count }} item{{ supplier.items.count|pluralize }}
+                        </small>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{% url 'inventory:item_list' %}?supplier={{ supplier.id }}" 
+                               class="btn btn-outline-primary">
+                                <i class="fas fa-eye"></i> View Items
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12">
+            <div class="text-center py-5">
+                <i class="fas fa-truck fa-3x text-muted mb-3"></i>
+                <h4 class="text-muted">No suppliers found</h4>
+                <p class="text-muted">Start by adding your first supplier.</p>
+                <a href="{% url 'inventory:supplier_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add Your First Supplier
+                </a>
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

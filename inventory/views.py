@@ -84,17 +84,17 @@ def item_detail(request, item_id):
     return render(request, 'inventory/item_detail.html', context)
 
 
-@login_required
 def item_create(request):
     """Create a new inventory item"""
     if request.method == 'POST':
         form = ItemForm(request.POST)
         if form.is_valid():
             item = form.save(commit=False)
-            item.created_by = request.user
+            if request.user.is_authenticated:
+                item.created_by = request.user
             item.save()
             messages.success(request, f'Item "{item.name}" created successfully!')
-            return redirect('item_detail', item_id=item.id)
+            return redirect('inventory:item_detail', item_id=item.id)
     else:
         form = ItemForm()
     
@@ -104,7 +104,6 @@ def item_create(request):
     })
 
 
-@login_required
 def item_edit(request, item_id):
     """Edit an existing inventory item"""
     item = get_object_or_404(Item, id=item_id)
@@ -114,7 +113,7 @@ def item_edit(request, item_id):
         if form.is_valid():
             form.save()
             messages.success(request, f'Item "{item.name}" updated successfully!')
-            return redirect('item_detail', item_id=item.id)
+            return redirect('inventory:item_detail', item_id=item.id)
     else:
         form = ItemForm(instance=item)
     
@@ -125,17 +124,17 @@ def item_edit(request, item_id):
     })
 
 
-@login_required
 def stock_movement_create(request):
     """Create a stock movement (in/out/adjustment)"""
     if request.method == 'POST':
         form = StockMovementForm(request.POST)
         if form.is_valid():
             movement = form.save(commit=False)
-            movement.created_by = request.user
+            if request.user.is_authenticated:
+                movement.created_by = request.user
             movement.save()
             messages.success(request, 'Stock movement recorded successfully!')
-            return redirect('item_detail', item_id=movement.item.id)
+            return redirect('inventory:item_detail', item_id=movement.item.id)
     else:
         form = StockMovementForm()
         # Pre-select item if provided in URL
@@ -155,7 +154,6 @@ def category_list(request):
     return render(request, 'inventory/category_list.html', {'categories': categories})
 
 
-@login_required
 def category_create(request):
     """Create a new category"""
     if request.method == 'POST':
@@ -163,7 +161,7 @@ def category_create(request):
         if form.is_valid():
             category = form.save()
             messages.success(request, f'Category "{category.name}" created successfully!')
-            return redirect('category_list')
+            return redirect('inventory:category_list')
     else:
         form = CategoryForm()
     
@@ -179,7 +177,6 @@ def supplier_list(request):
     return render(request, 'inventory/supplier_list.html', {'suppliers': suppliers})
 
 
-@login_required
 def supplier_create(request):
     """Create a new supplier"""
     if request.method == 'POST':
@@ -187,7 +184,7 @@ def supplier_create(request):
         if form.is_valid():
             supplier = form.save()
             messages.success(request, f'Supplier "{supplier.name}" created successfully!')
-            return redirect('supplier_list')
+            return redirect('inventory:supplier_list')
     else:
         form = SupplierForm()
     
