@@ -58,6 +58,10 @@ This application follows Django's MVC pattern:
    - Main application: http://127.0.0.1:8000/
    - Admin interface: http://127.0.0.1:8000/admin/
    - Default admin credentials: `admin` / `admin123`
+8. **Run Tests**
+ ```bash
+   python manage.py test inventory
+   ```
 
 ## Key Models
 
