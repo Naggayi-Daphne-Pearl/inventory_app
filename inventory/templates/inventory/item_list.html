@@ -107,8 +107,8 @@
                                         </small>
                                     {% endif %}
                                 </td>
-                                <td>${{ item.unit_price }}</td>
-                                <td>${{ item.stock_value|floatformat:2 }}</td>
+                                <td>UGX{{ item.unit_price }}</td>
+                                <td>UGX{{ item.stock_value|floatformat:2 }}</td>
                                 <td>
                                     {% if item.is_low_stock %}
                                         <span class="badge badge-low-stock">Low Stock</span>

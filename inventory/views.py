@@ -8,7 +8,32 @@ from django.views.decorators.http import require_http_methods
 import json
 from .models import Item, Category, Supplier, StockMovement, Order, OrderItem
 from .forms import ItemForm, CategoryForm, SupplierForm, StockMovementForm, OrderForm
+# ...for chart display...
+from django.db.models import FloatField, ExpressionWrapper
+from django.db.models import Count
+from django.db.models.functions import TruncDate
 
+from django.http import JsonResponse
+from .models import Item
+
+
+def price_margin_data(request):
+    items = Item.objects.all()
+    
+    data = {
+        'items': [],
+        'selling_prices': [],
+        'unit_prices': [],
+        'margins': []
+    }
+    
+    for item in items:
+        data['items'].append(item.name)
+        data['selling_prices'].append(float(item.selling_price))
+        data['unit_prices'].append(float(item.unit_price))
+        data['margins'].append(float(item.selling_price - item.unit_price))
+    
+    return JsonResponse(data)
 
 def dashboard(request):
     """Dashboard view with inventory overview"""
@@ -238,3 +263,72 @@ def api_item_search(request):
     } for item in items]
     
     return JsonResponse({'items': items_data})
+
+# ...CHART DISPLAY...
+
+# Stock by item chart
+def stock_by_item_data(request):
+    """
+    Returns JSON: { items: [{ name: "...", quantity_in_stock: 123 }, ...] }
+    """
+    qs = Item.objects.filter(is_active=True).order_by('-quantity_in_stock').values('name', 'quantity_in_stock')
+    return JsonResponse({'items': list(qs)})
+
+def stock_by_item_view(request):
+    """Page that renders the bar chart and fetches the JSON endpoint."""
+    return render(request, 'inventory/stock_by_item.html')
+
+# stock value by category chart
+
+def stock_value_by_category_data(request):
+    """
+    Returns JSON: { categories: [{ name: "...", total_value: 123.45 }, ...] }
+    Aggregates unit_price * quantity_in_stock per category (only active items).
+    """
+    qs = Category.objects.all().annotate(
+        total_value=Sum(
+            ExpressionWrapper(
+                # use the Category -> items related_name ('items'), not 'item'
+                F('items__unit_price') * F('items__quantity_in_stock'),
+                output_field=FloatField()
+            ),
+            filter=Q(items__is_active=True)
+        )
+    ).values('name', 'total_value').order_by('-total_value')
+
+    data = [{'name': c['name'], 'total_value': float(c['total_value'] or 0)} for c in qs]
+    return JsonResponse({'categories': data})
+
+def stock_value_by_category_view(request):
+    """Page that renders the stock value by category chart."""
+    return render(request, 'inventory/stock_value_by_category.html')
+
+from django.db.models import Count
+from django.db.models.functions import TruncDate
+# ...existing code...
+
+def stock_movements_time_series_data(request):
+    """Returns daily stock movements (in/out) for the last 30 days"""
+    thirty_days_ago = datetime.now() - timedelta(days=30)
+    
+    movements = StockMovement.objects.filter(
+        created_at__gte=thirty_days_ago
+    ).annotate(
+        date=TruncDate('created_at')
+    ).values('date', 'movement_type').annotate(
+        total=Count('id')
+    ).order_by('date')
+
+    # Organize by date for both in/out movements
+    data_by_date = {}
+    for m in movements:
+        date_str = m['date'].strftime('%Y-%m-%d')
+        if date_str not in data_by_date:
+            data_by_date[date_str] = {'in': 0, 'out': 0}
+        data_by_date[date_str][m['movement_type']] = m['total']
+
+    return JsonResponse({
+        'dates': list(data_by_date.keys()),
+        'in_movements': [data_by_date[d]['in'] for d in data_by_date],
+        'out_movements': [data_by_date[d]['out'] for d in data_by_date]
+    })

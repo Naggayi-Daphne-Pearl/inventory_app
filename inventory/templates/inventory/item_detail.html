@@ -77,11 +77,11 @@
                         <table class="table table-borderless">
                             <tr>
                                 <th width="30%">Unit Price:</th>
-                                <td>${{ item.unit_price }}</td>
+                                <td>UGX {{ item.unit_price }}</td>
                             </tr>
                             <tr>
                                 <th>Selling Price:</th>
-                                <td>${{ item.selling_price }}</td>
+                                <td>UGX{{ item.selling_price }}</td>
                             </tr>
                             <tr>
                                 <th>Profit Margin:</th>
@@ -140,7 +140,7 @@
                     </div>
                     <div class="col-6">
                         <small class="text-muted">Stock Value</small>
-                        <div class="h5">${{ item.stock_value|floatformat:2 }}</div>
+                        <div class="h5">UGX{{ item.stock_value|floatformat:2 }}</div>
                     </div>
                 </div>
             </div>

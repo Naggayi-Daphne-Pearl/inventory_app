@@ -29,4 +29,21 @@ urlpatterns = [
     
     # API endpoints
     path('api/item-search/', views.api_item_search, name='api_item_search'),
+
+    # ...for chart display...
+    path('stock-by-item/', views.stock_by_item_view, name='stock_by_item'),
+    path('api/stock-by-item/', views.stock_by_item_data, name='stock_by_item_data'),
+    
+     # adding chart page for stock value by category
+    path('stock-value-by-category/', views.stock_value_by_category_view, name='stock_value_by_category'),
+    path('api/stock-value-by-category/', views.stock_value_by_category_data, name='stock_value_by_category_data'),
+
+    path('api/stock-movements-time-series/', views.stock_movements_time_series_data, 
+         name='stock_movements_time_series_data'),
+
+    path('api/price-margin-data/', 
+         views.price_margin_data, 
+         name='price_margin_data'),
+
+    
 ]

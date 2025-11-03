@@ -1,0 +1,51 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Stock Value by Category - Inventory{% endblock %}
+
+{% block content %}
+  <h1>Stock Value by Category</h1>
+
+  <style>
+    #chart-wrap { width: 100%; max-width: 900px; height: 480px; }
+  </style>
+
+  <div id="chart-wrap">
+    <canvas id="categoryChart"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    async function drawCategoryChart() {
+      const resp = await fetch("{% url 'inventory:stock_value_by_category_data' %}");
+      const data = await resp.json();
+      const categories = data.categories || [];
+
+      const labels = categories.map(c => c.name);
+      const values = categories.map(c => c.total_value);
+
+      const ctx = document.getElementById('categoryChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Stock value (UGX)',
+            data: values,
+            backgroundColor: [
+              '#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f',
+              '#edc949','#af7aa1','#ff9da7','#9c755f','#bab0ac'
+            ],
+            borderColor: '#fff',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { position: 'right' } }
+        }
+      });
+    }
+    drawCategoryChart().catch(err => console.error(err));
+  </script>
+{% endblock %}

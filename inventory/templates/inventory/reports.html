@@ -22,31 +22,34 @@
             </div>
             <div class="card-body">
                 {% if category_stock_value %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Category</th>
-                                    <th>Total Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for category in category_stock_value %}
-                                    <tr>
-                                        <td>{{ category.name }}</td>
-                                        <td>${{ category.total_value|floatformat:2 }}</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Total Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for category in category_stock_value %}
+                            <tr>
+                                <td>{{ category.name }}</td>
+                                <td>UGX{{ category.total_value|floatformat:2 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% else %}
-                    <p class="text-muted">No stock value data available.</p>
+                <p class="text-muted">No stock value data available.</p>
                 {% endif %}
+            </div>
+            <div id="chart-wrap">
+                <canvas id="categoryChart"></canvas>
             </div>
         </div>
     </div>
-    
+
     <!-- Low Stock Items -->
     <div class="col-md-6">
         <div class="card">
@@ -58,37 +61,162 @@
             </div>
             <div class="card-body">
                 {% if low_stock_items %}
-                    <div class="list-group list-group-flush">
-                        {% for item in low_stock_items %}
-                            <div class="list-group-item d-flex justify-content-between align-items-center">
-                                <div>
-                                    <strong>{{ item.name }}</strong>
-                                    <br>
-                                    <small class="text-muted">{{ item.category.name }} - {{ item.sku }}</small>
-                                </div>
-                                <div>
-                                    <span class="badge badge-low-stock">
-                                        {{ item.quantity_in_stock }}/{{ item.minimum_stock_level }}
-                                    </span>
-                                </div>
-                            </div>
-                        {% endfor %}
+                <div class="list-group list-group-flush">
+                    {% for item in low_stock_items %}
+                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ item.name }}</strong>
+                            <br>
+                            <small class="text-muted">{{ item.category.name }} - {{ item.sku }}</small>
+                        </div>
+                        <div>
+                            <span class="badge badge-low-stock">
+                                {{ item.quantity_in_stock }}/{{ item.minimum_stock_level }}
+                            </span>
+                        </div>
                     </div>
-                    <div class="mt-3">
-                        <a href="{% url 'inventory:item_list' %}?stock_status=low" class="btn btn-sm btn-outline-warning">
-                            View All Low Stock Items
-                        </a>
-                    </div>
+                    {% endfor %}
+                </div>
+                <div class="mt-3">
+                    <a href="{% url 'inventory:item_list' %}?stock_status=low" class="btn btn-sm btn-outline-warning">
+                        View All Low Stock Items
+                    </a>
+                </div>
                 {% else %}
-                    <div class="text-center py-3">
-                        <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
-                        <p class="text-muted mb-0">All items are adequately stocked!</p>
-                    </div>
+                <div class="text-center py-3">
+                    <i class="fas fa-check-circle text-success fa-2x mb-2"></i>
+                    <p class="text-muted mb-0">All items are adequately stocked!</p>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<!-- <div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie"></i>
+                    Current Stock by Item
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="stockChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div>
+        
+    </div>
+</div> -->
+
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-pie"></i>
+                    Current Stock by Item
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="stockChart"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="card mb-10">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-dollar-sign"></i>
+                    Price Margin Analysis
+                </h5>
+            </div>
+            <div class="card-body">
+                <canvas id="priceMarginChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ...existing scripts...
+
+    async function drawPriceMarginChart() {
+        const resp = await fetch("{% url 'inventory:price_margin_data' %}");
+        const data = await resp.json();
+
+        const ctx = document.getElementById('priceMarginChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.items,
+                datasets: [
+                    {
+                        label: 'Selling Price',
+                        data: data.selling_prices,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Unit Cost',
+                        data: data.unit_prices,
+                        backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Price (UGX)'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            afterBody: function (context) {
+                                const idx = context[0].dataIndex;
+                                const margin = data.margins[idx];
+                                return `Margin: UGX ${margin.toFixed(2)}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    drawPriceMarginChart().catch(err => console.error('Error loading price margin chart:', err));
+</script>
+
+<!--Recent stock movements chart-->
+<!-- <div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-chart-line"></i>
+                    Stock Movements Over Time
+                </h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="movementsTimeChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div> -->
 
 <!-- Recent Stock Movements -->
 <div class="row">
@@ -102,70 +230,202 @@
             </div>
             <div class="card-body">
                 {% if recent_movements %}
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Date</th>
-                                    <th>Item</th>
-                                    <th>Type</th>
-                                    <th>Quantity</th>
-                                    <th>Reference</th>
-                                    <th>Created By</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for movement in recent_movements %}
-                                    <tr>
-                                        <td>{{ movement.created_at|date:"M d, Y H:i" }}</td>
-                                        <td>
-                                            <strong>{{ movement.item.name }}</strong>
-                                            <br>
-                                            <small class="text-muted">{{ movement.item.sku }}</small>
-                                        </td>
-                                        <td>
-                                            {% if movement.movement_type == 'in' %}
-                                                <span class="badge bg-success">Stock In</span>
-                                            {% elif movement.movement_type == 'out' %}
-                                                <span class="badge bg-danger">Stock Out</span>
-                                            {% else %}
-                                                <span class="badge bg-warning">Adjustment</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if movement.movement_type == 'out' %}-{% endif %}{{ movement.quantity }}
-                                        </td>
-                                        <td>
-                                            {% if movement.reference %}
-                                                {{ movement.reference }}
-                                            {% else %}
-                                                <span class="text-muted">-</span>
-                                            {% endif %}
-                                        </td>
-                                        <td>
-                                            {% if movement.created_by %}
-                                                {{ movement.created_by.username }}
-                                            {% else %}
-                                                <span class="text-muted">Guest</span>
-                                            {% endif %}
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Item</th>
+                                <th>Type</th>
+                                <th>Quantity</th>
+                                <th>Reference</th>
+                                <th>Created By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movement in recent_movements %}
+                            <tr>
+                                <td>{{ movement.created_at|date:"M d, Y H:i" }}</td>
+                                <td>
+                                    <strong>{{ movement.item.name }}</strong>
+                                    <br>
+                                    <small class="text-muted">{{ movement.item.sku }}</small>
+                                </td>
+                                <td>
+                                    {% if movement.movement_type == 'in' %}
+                                    <span class="badge bg-success">Stock In</span>
+                                    {% elif movement.movement_type == 'out' %}
+                                    <span class="badge bg-danger">Stock Out</span>
+                                    {% else %}
+                                    <span class="badge bg-warning">Adjustment</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if movement.movement_type == 'out' %}-{% endif %}{{ movement.quantity }}
+                                </td>
+                                <td>
+                                    {% if movement.reference %}
+                                    {{ movement.reference }}
+                                    {% else %}
+                                    <span class="text-muted">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if movement.created_by %}
+                                    {{ movement.created_by.username }}
+                                    {% else %}
+                                    <span class="text-muted">Guest</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% else %}
-                    <div class="text-center py-5">
-                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
-                        <h4 class="text-muted">No stock movements yet</h4>
-                        <p class="text-muted">Stock movements will appear here as you add and remove inventory.</p>
-                        <a href="{% url 'inventory:stock_movement_create' %}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> Record First Movement
-                        </a>
-                    </div>
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No stock movements yet</h4>
+                    <p class="text-muted">Stock movements will appear here as you add and remove inventory.</p>
+                    <a href="{% url 'inventory:stock_movement_create' %}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Record First Movement
+                    </a>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+<script>
+    async function drawCategoryChart() {
+        const resp = await fetch("{% url 'inventory:stock_value_by_category_data' %}");
+        const data = await resp.json();
+        const categories = data.categories || [];
+
+        const labels = categories.map(c => c.name);
+        const values = categories.map(c => c.total_value);
+
+        const ctx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Stock value (UGX)',
+                    data: values,
+                    backgroundColor: [
+                        '#4e79a7', '#f28e2b', '#e15759', '#76b7b2', '#59a14f',
+                        '#edc949', '#af7aa1', '#ff9da7', '#9c755f', '#bab0ac'
+                    ],
+                    borderColor: '#fff',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'right' } }
+            }
+        });
+    }
+    drawCategoryChart().catch(err => console.error(err));
+
+    async function drawStockChart() {
+        const resp = await fetch("{% url 'inventory:stock_by_item_data' %}");
+        const data = await resp.json();
+        const items = data.items || [];
+
+        const labels = items.map(i => i.name);
+        const quantities = items.map(i => i.quantity_in_stock);
+
+        const ctx = document.getElementById('stockChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Quantity in stock',
+                    data: quantities,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                scales: { x: { beginAtZero: true } },
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    }
+    drawStockChart().catch(err => console.error(err));
+
+    async function drawMovementsTimeChart() {
+        const resp = await fetch("{% url 'inventory:stock_movements_time_series_data' %}");
+        const data = await resp.json();
+
+        const ctx = document.getElementById('movementsTimeChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.dates,
+                datasets: [
+                    {
+                        label: 'Stock In',
+                        data: data.in_movements,
+                        borderColor: 'rgb(75, 192, 192)',
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    },
+                    {
+                        label: 'Stock Out',
+                        data: data.out_movements,
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        tension: 0.1,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'day',
+                            displayFormats: {
+                                day: 'MMM d'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Movements'
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
+                    }
+                }
+            }
+        });
+    }
+    drawMovementsTimeChart().catch(err => console.error('Error loading movements chart:', err));
+</script>
 {% endblock %}

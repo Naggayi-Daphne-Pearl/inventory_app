@@ -1,0 +1,50 @@
+{% extends 'inventory/base.html' %}
+
+{% block title %}Stock by Item - Inventory{% endblock %}
+
+{% block content %}
+  <h1>Current Stock by Item</h1>
+
+  <style>
+    /* keep canvas visible on small pages */
+    #chart-wrap { width: 100%; max-width: 900px; height: 480px; }
+  </style>
+
+  <div id="chart-wrap">
+    <canvas id="stockChart"></canvas>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    async function drawChart() {
+      const resp = await fetch("{% url 'inventory:stock_by_item_data' %}");
+      const data = await resp.json();
+      const items = data.items || [];
+
+      const labels = items.map(i => i.name);
+      const quantities = items.map(i => i.quantity_in_stock);
+
+      const ctx = document.getElementById('stockChart').getContext('2d');
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [{
+            label: 'Quantity in stock',
+            data: quantities,
+            backgroundColor: 'rgba(54, 162, 235, 0.6)',
+            borderColor: 'rgba(54, 162, 235, 1)',
+            borderWidth: 1
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          scales: { x: { beginAtZero: true } },
+          responsive: true,
+          maintainAspectRatio: false
+        }
+      });
+    }
+    drawChart().catch(err => console.error(err));
+  </script>
+{% endblock %}
